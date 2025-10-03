@@ -1,0 +1,572 @@
+# الملفات الناقصة - النسخة الكاملة
+
+## 1. ExportDialog.kt
+
+```kotlin
+package com.smartschedule.presentation.ui.screens
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.smartschedule.domain.usecase.ExportFormat
+
+@Composable
+fun ExportDialog(
+    onDismiss: () -> Unit,
+    onExport: (ExportFormat) -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "تصدير الجدول",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                
+                Text(
+                    text = "اختر صيغة التصدير المناسبة",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                ExportOption(
+                    title = "PDF",
+                    description = "ملف PDF مناسب للطباعة والعرض",
+                    icon = Icons.Default.PictureAsPdf,
+                    onClick = { 
+                        onExport(ExportFormat.PDF)
+                        onDismiss()
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                ExportOption(
+                    title = "Excel (CSV)",
+                    description = "ملف Excel للتحرير والتعديل",
+                    icon = Icons.Default.TableChart,
+                    onClick = { 
+                        onExport(ExportFormat.EXCEL)
+                        onDismiss()
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                ExportOption(
+                    title = "CSV", 
+                    description = "ملف CSV للبيانات الخام",
+                    icon = Icons.Default.Description,
+                    onClick = { 
+                        onExport(ExportFormat.CSV)
+                        onDismiss()
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("إلغاء")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExportOption(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.Default.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+```
+
+---
+
+## 2. proguard-rules.pro
+
+```proguard
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+-renamesourcefileattribute SourceFile
+
+# ========================
+# Kotlin
+# ========================
+-dontwarn kotlin.**
+-keepclassmembers class **$WhenMappings {
+    <fields>;
+}
+-keepclassmembers class kotlin.Metadata {
+    public <methods>;
+}
+-assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+    static void checkParameterIsNotNull(java.lang.Object, java.lang.String);
+}
+
+# ========================
+# Coroutines
+# ========================
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+
+# ========================
+# Room
+# ========================
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-dontwarn androidx.room.paging.**
+
+# ========================
+# Hilt
+# ========================
+-keep class dagger.hilt.** { *; }
+-keep class javax.inject.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
+-keep @dagger.hilt.android.lifecycle.HiltViewModel class * extends androidx.lifecycle.ViewModel
+
+# ========================
+# Gson
+# ========================
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn sun.misc.**
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+
+# Keep data classes for Gson
+-keep class com.smartschedule.data.database.entities.** { *; }
+-keep class com.smartschedule.domain.models.** { *; }
+
+# ========================
+# DataStore
+# ========================
+-keep class androidx.datastore.*.** { *; }
+
+# ========================
+# Compose
+# ========================
+-keep class androidx.compose.runtime.** { *; }
+-keep class androidx.compose.ui.** { *; }
+-keep class androidx.compose.material3.** { *; }
+-dontwarn androidx.compose.**
+
+# ========================
+# Navigation
+# ========================
+-keep class androidx.navigation.** { *; }
+
+# ========================
+# Timber
+# ========================
+-dontwarn org.jetbrains.annotations.**
+-keep class timber.log.** { *; }
+
+# ========================
+# Application-specific
+# ========================
+# Keep all classes in the smartschedule package
+-keep class com.smartschedule.** { *; }
+
+# Keep ViewModels
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+
+# Keep Repository implementations
+-keep class * implements com.smartschedule.domain.repository.** { *; }
+
+# Keep UseCases
+-keep class com.smartschedule.domain.usecase.** { *; }
+
+# Keep Genetic Algorithm Engine
+-keep class com.smartschedule.utils.algorithms.GeneticAlgorithmEngine { *; }
+
+# ========================
+# General
+# ========================
+-keepattributes *Annotation*, InnerClasses
+-keepattributes Signature, Exception
+
+# For native methods
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# For enumeration classes
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# Keep Parcelable implementation
+-keepclassmembers class * implements android.os.Parcelable {
+    public static final ** CREATOR;
+}
+
+# Keep Serializable implementation
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+```
+
+---
+
+## 3. Resources - Vector Drawables (اختياري)
+
+بما أن المشروع يستخدم Material Icons من Compose، لا حاجة لإضافة drawable resources إضافية. لكن إذا أردت إضافة أيقونات مخصصة:
+
+### app/src/main/res/drawable/ic_launcher_background.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#3DDC84"
+        android:pathData="M0,0h108v108h-108z" />
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M9,0L9,108"
+        android:strokeWidth="0.8"
+        android:strokeColor="#33FFFFFF" />
+</vector>
+```
+
+### app/src/main/res/drawable/ic_launcher_foreground.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        android:translateX="27"
+        android:translateY="27">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M32,16c8.837,0 16,7.163 16,16s-7.163,16 -16,16 -16,-7.163 -16,-16 7.163,-16 16,-16zM32,8c-13.255,0 -24,10.745 -24,24s10.745,24 24,24 24,-10.745 24,-24 -10.745,-24 -24,-24zM28,20h8v16h-8z" />
+    </group>
+</vector>
+```
+
+---
+
+## 4. ملف mipmap (اختياري - للأيقونة)
+
+إذا أردت إنشاء أيقونة مخصصة، ضعها في:
+
+```
+res/
+├── mipmap-mdpi/
+│   └── ic_launcher.png (48x48)
+├── mipmap-hdpi/
+│   └── ic_launcher.png (72x72)
+├── mipmap-xhdpi/
+│   └── ic_launcher.png (96x96)
+├── mipmap-xxhdpi/
+│   └── ic_launcher.png (144x144)
+└── mipmap-xxxhdpi/
+    └── ic_launcher.png (192x192)
+```
+
+لكن يمكنك الاستمرار بالأيقونة الافتراضية التي ينشئها Android Studio.
+
+---
+
+## 5. ملفات إضافية مفيدة
+
+### .gitignore (في المجلد الرئيسي)
+
+```gitignore
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Proguard folder generated by Eclipse
+proguard/
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Android Studio captures folder
+captures/
+
+# IntelliJ
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/.name
+.idea/compiler.xml
+.idea/misc.xml
+.idea/deploymentTargetDropDown.xml
+.idea/render.experimental.xml
+
+# Keystore files
+*.jks
+*.keystore
+
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild
+.cxx/
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Freeline
+freeline.py
+freeline/
+freeline_project_description.json
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# Version control
+vcs.xml
+
+# lint
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+lint-results*.xml
+
+# Android Profiling
+*.hprof
+
+# OS files
+.DS_Store
+Thumbs.db
+```
+# AppModule.kt - النسخة المعدلة الكاملة
+
+```kotlin
+package com.smartschedule.data.di
+
+import android.content.Context
+import androidx.room.Room
+import com.smartschedule.data.database.AppDatabase
+import com.smartschedule.data.local.PreferencesManager
+import com.smartschedule.data.repository.TimetableRepositoryImpl
+import com.smartschedule.domain.repository.TimetableRepository
+import com.smartschedule.utils.algorithms.GeneticAlgorithmEngine
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            AppDatabase.DATABASE_NAME
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimetableRepository(db: AppDatabase): TimetableRepository {
+        return TimetableRepositoryImpl(db)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesManager(@ApplicationContext context: Context): PreferencesManager {
+        return PreferencesManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeneticEngine(
+        preferencesManager: PreferencesManager
+    ): GeneticAlgorithmEngine {
+        return GeneticAlgorithmEngine(preferencesManager)
+    }
+}
+```
+
+## التغييرات الرئيسية
+
+1. **إضافة `providePreferencesManager`**: هذا مهم لأن `PreferencesManager` يحتاج إلى `Context` في constructor، ولا يمكن لـ Hilt توفيره تلقائياً بدون هذا Provider.
+
+2. **تعديل `provideGeneticEngine`**: الآن يستقبل `PreferencesManager` كمعامل بدلاً من إنشاء instance فارغ.
+
+3. **الترتيب المنطقي**: 
+   - Database أولاً
+   - Repository ثانياً (يعتمد على Database)
+   - PreferencesManager ثالثاً (مستقل)
+   - GeneticEngine رابعاً (يعتمد على PreferencesManager)
+
+## ملف PreferencesModule.kt (اختياري)
+
+إذا كنت تفضل فصل منطق PreferencesManager في module منفصل (كما كان في بعض الأكواد)، يمكنك الاستغناء عن `providePreferencesManager` في AppModule وإنشاء:
+
+```kotlin
+package com.smartschedule.di
+
+import android.content.Context
+import com.smartschedule.data.local.PreferencesManager
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object PreferencesModule {
+
+    @Provides
+    @Singleton
+    fun providePreferencesManager(@ApplicationContext context: Context): PreferencesManager {
+        return PreferencesManager(context)
+    }
+}
+```
